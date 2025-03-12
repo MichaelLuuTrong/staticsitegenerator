@@ -1,6 +1,6 @@
 import unittest
 
-from textnode import TextNode, TextType
+from textnode import TextNode, TextType, text_node_to_html_node
 
 
 class TestTextNode(unittest.TestCase):
@@ -23,6 +23,44 @@ class TestTextNode(unittest.TestCase):
         node1 = TextNode("This is a text node", TextType.LINK, "http://google.com")
         node2 = TextNode("This is a text node", TextType.LINK, "http://google.com")
         self.assertEqual(node1, node2)
+
+    def test_normal(self):
+        node = TextNode("This is a text node", TextType.NORMAL)
+        html_node = text_node_to_html_node(node)
+        self.assertEqual(html_node.tag, None)
+        self.assertEqual(html_node.value, "This is a text node")
+
+    def test_bold(self):
+        node = TextNode("This is a bold text node", TextType.BOLD)
+        html_node = text_node_to_html_node(node)
+        self.assertEqual(html_node.tag, "b")
+        self.assertEqual(html_node.value, "This is a bold text node")
+
+    def test_italic(self):
+        node = TextNode("This is an italic text node", TextType.ITALIC)
+        html_node = text_node_to_html_node(node)
+        self.assertEqual(html_node.tag, "i")
+        self.assertEqual(html_node.value, "This is an italic text node")
+
+    def test_code(self):
+        node = TextNode("This is a code text node", TextType.CODE)
+        html_node = text_node_to_html_node(node)
+        self.assertEqual(html_node.tag, "code")
+        self.assertEqual(html_node.value, "This is a code text node")
+
+    def test_link(self):
+        node = TextNode("This is a link text node", TextType.LINK, "http://youtube.com")
+        html_node = text_node_to_html_node(node)
+        self.assertEqual(html_node.tag, "a")
+        self.assertEqual(html_node.value, "This is a link text node")
+        self.assertEqual(html_node.props, {"href": "http://youtube.com"})
+
+    def test_image(self):
+        node = TextNode("This is an image text node", TextType.IMAGE, "https://th-thumbnailer.cdn-si-edu.com/QZfWhcNzUihCbdc3lXSVf5KViXk=/800x600/filters:focal(393x403:394x404)/https://tf-cmsv2-smithsonianmag-media.s3.amazonaws.com/filer/b1/ef/b1ef12c3-d5cd-4c7e-882c-290ffc946a33/greysealpupday2web.jpg")
+        html_node = text_node_to_html_node(node)
+        self.assertEqual(html_node.tag, "img")
+        self.assertEqual(html_node.value, "")
+        self.assertEqual(html_node.props, {"src": "https://th-thumbnailer.cdn-si-edu.com/QZfWhcNzUihCbdc3lXSVf5KViXk=/800x600/filters:focal(393x403:394x404)/https://tf-cmsv2-smithsonianmag-media.s3.amazonaws.com/filer/b1/ef/b1ef12c3-d5cd-4c7e-882c-290ffc946a33/greysealpupday2web.jpg", "alt": "This is an image text node" })
 
 if __name__ == "__main__":
     unittest.main()
