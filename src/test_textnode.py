@@ -1,6 +1,6 @@
 import unittest
 
-from textnode import TextNode, TextType, text_node_to_html_node
+from textnode import TextNode, TextType, text_node_to_html_node, split_nodes_delimiter
 
 
 class TestTextNode(unittest.TestCase):
@@ -61,6 +61,37 @@ class TestTextNode(unittest.TestCase):
         self.assertEqual(html_node.tag, "img")
         self.assertEqual(html_node.value, "")
         self.assertEqual(html_node.props, {"src": "https://th-thumbnailer.cdn-si-edu.com/QZfWhcNzUihCbdc3lXSVf5KViXk=/800x600/filters:focal(393x403:394x404)/https://tf-cmsv2-smithsonianmag-media.s3.amazonaws.com/filer/b1/ef/b1ef12c3-d5cd-4c7e-882c-290ffc946a33/greysealpupday2web.jpg", "alt": "This is an image text node" })
+
+    def test_split_nodes_delimiter(self):
+        node = TextNode("This is text with a `code block` word", TextType.NORMAL)
+        new_nodes = split_nodes_delimiter([node], "`", TextType.CODE)
+        self.assertEqual(new_nodes, [
+            TextNode("This is text with a ", TextType.NORMAL),
+            TextNode("code block", TextType.CODE),
+            TextNode(" word", TextType.NORMAL),
+        ])
+    def test_split_nodes_delimiter_only_one_instance_of_delimiter(self):
+        node = TextNode("This is text with a `code block word", TextType.NORMAL)
+        with self.assertRaises(Exception) as context:
+            split_nodes_delimiter([node], "`", TextType.CODE)
+        self.assertEqual(
+            str(context.exception), "Invalid markdown: no closing delimiter")
+    def test_split_nodes_delimiter_no_instances_of_delimiter(self):
+        node = TextNode("This is text without a code block word", TextType.NORMAL)
+        new_node = split_nodes_delimiter([node], "`", TextType.CODE)
+        self.assertEqual(new_node, [TextNode("This is text without a code block word", TextType.NORMAL)])
+    def test_split_nodes_delimiter_four_instances_of_delimiter(self):
+        node = TextNode("This is `text` with two `code block` words", TextType.NORMAL)
+        new_nodes = split_nodes_delimiter([node], "`", TextType.CODE)
+        self.assertEqual(new_nodes, [
+                TextNode("This is ", TextType.NORMAL),
+                TextNode("text", TextType.CODE),
+                TextNode(" with two ", TextType.NORMAL),
+                TextNode("code block", TextType.CODE),
+                TextNode(" words", TextType.NORMAL)
+        ])
+
+
 
 if __name__ == "__main__":
     unittest.main()

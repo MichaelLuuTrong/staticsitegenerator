@@ -42,3 +42,42 @@ def text_node_to_html_node(text_node):
 			raise Exception("Invalid text type")
 			
 
+def split_nodes_delimiter(old_nodes, delimiter, text_type):
+	#old nodes is a list of what appears to be TextNodes
+	#returns a new list of nodes, where "text" type nodes in the input are split into multiple nodes
+	new_nodes = []
+	for node in old_nodes:
+		if node.text_type != TextType.NORMAL:
+			new_nodes.append(node)
+			continue
+		text = node.text
+
+		start_idx = text.find(delimiter)
+		if start_idx == -1:
+			new_nodes.append(node)
+			continue
+		
+		end_idx = text.find(delimiter, start_idx + len(delimiter))
+		if end_idx == -1:
+			raise Exception("Invalid markdown: no closing delimiter")
+
+		before_text = text[:start_idx]
+		between_text = text[start_idx + len(delimiter):end_idx]
+		after_text = text[end_idx + len(delimiter):]
+
+		if before_text:
+			new_nodes.append(TextNode(before_text, TextType.NORMAL))
+		new_nodes.append(TextNode(between_text, text_type))
+
+		if after_text:
+			remaining_node = TextNode(after_text, TextType.NORMAL)
+			result_nodes = split_nodes_delimiter([remaining_node], delimiter, text_type)
+			new_nodes.extend(result_nodes)
+
+	return new_nodes
+
+
+		
+
+
+
