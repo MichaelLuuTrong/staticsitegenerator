@@ -24,7 +24,7 @@ class TextNode:
 		else:
 			return False
 	def __repr__(self):
-		return (f"TextNode({self.text}, {(self.text_type).value}, {self.url})")
+		return (f"TextNode({self.text}, {(self.text_type).name}, {self.url})")
 	
 def text_node_to_html_node(text_node):
 	match text_node.text_type:
@@ -86,7 +86,74 @@ def extract_markdown_links(text):
 	pattern = r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
 	return re.findall(pattern, text)
 
-		
+def split_nodes_image(old_nodes):
+	res = []
+	# operate on each node individually
+	for node in old_nodes:
+		split_node_text_array = []
+		found_image_text_array = extract_markdown_images(node.text)
+		node_text = node.text
+
+		for found_image_text in found_image_text_array:
+			reconstructed_image_text = f"![{found_image_text[0]}]({found_image_text[1]})"
+			index_of_image_start = node_text.find(reconstructed_image_text)
+			index_of_image_end = index_of_image_start + len(reconstructed_image_text)
+
+			before_image = node_text[:index_of_image_start]
+			if before_image:  # Only create a node if there's actual text before the image
+				before_image_textnode = TextNode(before_image, TextType.NORMAL)
+				split_node_text_array.append(before_image_textnode)
+			
+			image_textnode = TextNode(found_image_text[0], TextType.IMAGE, found_image_text[1])
+			split_node_text_array.append(image_textnode)
+
+			# remove the node_text that has already been accounted for
+			node_text = node_text[index_of_image_end:]
+
+		if node_text:
+			remaining_textnode = TextNode(node_text, TextType.NORMAL)
+			split_node_text_array.append(remaining_textnode)
+
+		res.extend(split_node_text_array)
+
+	return res
+
+def split_nodes_link(old_nodes):
+    res = []
+    # operate on each node individually
+    for node in old_nodes:
+        split_node_text_array = []
+        found_link_text_array = extract_markdown_links(node.text)
+        node_text = node.text
+
+        for found_link_text in found_link_text_array:
+            reconstructed_link_text = f"[{found_link_text[0]}]({found_link_text[1]})"
+            index_of_link_start = node_text.find(reconstructed_link_text)
+            index_of_link_end = index_of_link_start + len(reconstructed_link_text)
+
+            before_link = node_text[:index_of_link_start]
+            if before_link:  # Only create a node if there's actual text before the link
+                before_link_textnode = TextNode(before_link, TextType.NORMAL)
+                split_node_text_array.append(before_link_textnode)
+            
+            link_textnode = TextNode(found_link_text[0], TextType.LINK, found_link_text[1])
+            split_node_text_array.append(link_textnode)
+
+            # remove the node_text that has already been accounted for
+            node_text = node_text[index_of_link_end:]
+
+        if node_text:
+            remaining_textnode = TextNode(node_text, TextType.NORMAL)
+            split_node_text_array.append(remaining_textnode)
+
+        res.extend(split_node_text_array)
+
+    return res
+
+# def text_to_textnodes(text):
+
+
+
 
 
 
