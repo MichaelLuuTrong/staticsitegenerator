@@ -80,16 +80,22 @@ def split_nodes_delimiter(old_nodes, delimiter, text_type):
 
 def extract_markdown_images(text):
     pattern = r"!\[(.*?)\]\((.*?)\)"
-    return re.findall(pattern, text)
+    images = re.findall(pattern, text)
+    return images
 
 def extract_markdown_links(text):
-	pattern = r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
-	return re.findall(pattern, text)
+    pattern = r"(?<!!)\[([^\[\]]*)\]\(([^\(\)]*)\)"
+    links = re.findall(pattern, text)
+    return links
 
 def split_nodes_image(old_nodes):
 	res = []
 	# operate on each node individually
 	for node in old_nodes:
+		if node.text_type != TextType.NORMAL:
+				res.append(node)
+				continue
+	
 		split_node_text_array = []
 		found_image_text_array = extract_markdown_images(node.text)
 		node_text = node.text
@@ -122,6 +128,10 @@ def split_nodes_link(old_nodes):
     res = []
     # operate on each node individually
     for node in old_nodes:
+        if node.text_type != TextType.NORMAL:
+            res.append(node)
+            continue
+        
         split_node_text_array = []
         found_link_text_array = extract_markdown_links(node.text)
         node_text = node.text
@@ -150,10 +160,12 @@ def split_nodes_link(old_nodes):
 
     return res
 
-# def text_to_textnodes(text):
-
-
-
-
-
+def text_to_textnodes(text):
+	nodes = [TextNode(text, TextType.NORMAL)]
+	nodes = split_nodes_image(nodes)
+	nodes = split_nodes_link(nodes)
+	nodes = split_nodes_delimiter(nodes, "_", TextType.ITALIC)
+	nodes = split_nodes_delimiter(nodes, "`", TextType.CODE)
+	nodes = split_nodes_delimiter(nodes, "**", TextType.BOLD)
+	return nodes
 
