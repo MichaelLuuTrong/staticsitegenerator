@@ -1,4 +1,5 @@
 from enum import Enum
+import re
 
 class BlockType(Enum):
     PARAGRAPH = "paragraph"
@@ -7,9 +8,6 @@ class BlockType(Enum):
     QUOTE = "quote"
     UNORDERED_LIST = "unordered_list"
     ORDERED_LIST = "ordered_list"
-
-
-
 
 def markdown_to_blocks(markdown):
     #markdown is a string reprsenting a full document
@@ -37,7 +35,39 @@ def markdown_to_blocks(markdown):
             res.append('\n'.join(stripped_subitems))
     return res
 
-def block_to_block_type
+def block_to_block_type(block):
+    split_block = block.split('\n')
+    if re.fullmatch(r"#{1,6} .+", split_block[0]):
+        return BlockType.HEADING
+    if block.startswith("```") and block.endswith("```"):
+        return BlockType.CODE
+    if all(line.startswith(">") for line in split_block):
+        return BlockType.QUOTE
+    if all(re.match(r"^[-*+] ", line) for line in split_block):
+        return BlockType.UNORDERED_LIST
+    if not split_block:
+        raise TypeError("block is not a string")
+    
+    numbers = []
+    for line in split_block:
+        match = re.match(r"^(\d+)\.", line)
+        if match:
+            numbers.append(int(match.group(1)))
+        else:
+            return BlockType.PARAGRAPH
+        
+    if not numbers:
+        return BlockType.PARAGRAPH
+    if numbers[0] != 1:
+        return BlockType.PARAGRAPH
+    for i in range(1, len(numbers)):
+        if numbers[i] != numbers[i - 1] + 1:
+            return BlockType.PARAGRAPH
+    return BlockType.ORDERED_LIST
+
+
+
+
 
 
 
